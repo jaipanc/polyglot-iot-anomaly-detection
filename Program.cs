@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Mvc;
+using System.Threading.Channels;
 
 namespace SensorApi
 {
@@ -12,7 +14,7 @@ namespace SensorApi
 
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
-            builder.Services.AddEndpointsApiExplorer();
+            
             builder.Services.AddHttpClient();
 
             var app = builder.Build();
@@ -32,19 +34,14 @@ namespace SensorApi
                 "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
             };
 
-            app.MapGet("/weatherforecast", (HttpContext httpContext) =>
+
+            app.MapGet("/sensor", async ([FromBody] SensorReading reading, Channel<SensorReading> channel) =>
             {
-                var forecast = Enumerable.Range(1, 5).Select(index =>
-                    new WeatherForecast
-                    {
-                        Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                        TemperatureC = Random.Shared.Next(-20, 55),
-                        Summary = summaries[Random.Shared.Next(summaries.Length)]
-                    })
-                    .ToArray();
-                return forecast;
+                // Write directly to the channel
+                await channel.Writer.WriteAsync(reading);
+                return Results.Ok(new { message = "Reading queued for processing" });
             })
-            .WithName("GetWeatherForecast");
+            .WithName("IngestSensorData");
 
             app.Run();
         }
