@@ -28,13 +28,7 @@ namespace SensorApi
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
-
-            var summaries = new[]
-            {
-                "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-            };
-
-
+         
             app.MapGet("/sensor", async ([FromBody] SensorReading reading, Channel<SensorReading> channel) =>
             {
                 // Write directly to the channel
